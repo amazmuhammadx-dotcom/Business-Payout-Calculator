@@ -166,38 +166,71 @@ def calculate(
     salary: float,
     overall_tax_rate: float,
     pakistan_tax_rate: float,
-    exchange_rate: float
+    exchange_rate: float,
+    additional_deduction: float
 ) -> PayoutResult:
+
     tax_amount = round(salary * overall_tax_rate, 2)
-    final_payout_after_tax = round(salary - tax_amount, 2)
 
-    group_30 = round(final_payout_after_tax * 0.30, 2)
-    raza_15 = round(final_payout_after_tax * 0.15, 2)
-    amaz_hammad_15 = round(final_payout_after_tax * 0.15, 2)
+    final_payout_before_pakistan_tax = round(
+        salary - tax_amount - additional_deduction, 2
+    )
+
+    raza_share_rate = 0.15
+    group_share_rate = 0.30
+
+    final_payout_after_tax = round(
+        final_payout_before_pakistan_tax / (1 + pakistan_tax_rate * (1 - raza_share_rate)),
+        2
+    )
+
+    group_30 = round(final_payout_after_tax * group_share_rate, 2)
+
+    raza_15 = round(group_30 / 2, 2)
+
+    amaz_hammad_15 = round(group_30 / 2, 2)
+
     amaz_cut_usd = round(amaz_hammad_15 / 2, 2)
+
     hammad_cut_usd = round(amaz_hammad_15 / 2, 2)
-    hamza_team_70 = round(final_payout_after_tax * 0.70, 2)
 
-    # Amount sent to Pakistan excludes Raza's 15%.
-    amount_to_pakistan_before_tax = round(final_payout_after_tax - raza_15, 2)
+    hamza_team_70 = round(final_payout_after_tax - group_30, 2)
 
-    # Pakistan tax is applied on the amount sent to Pakistan.
-    pakistan_tax = round(amount_to_pakistan_before_tax * pakistan_tax_rate, 2)
-    amount_sent_to_pakistan = round(amount_to_pakistan_before_tax - pakistan_tax, 2)
+    amount_to_pakistan_before_tax = round(amaz_hammad_15 + hamza_team_70, 2)
+
+    pakistan_tax = round(
+        (final_payout_before_pakistan_tax - raza_15) * pakistan_tax_rate, 2
+    )
+
+    amount_sent_to_pakistan = amount_to_pakistan_before_tax
 
     calculated_pkr_received = round(amount_sent_to_pakistan * exchange_rate, 0)
-    pkr_received = calculated_pkr_received
-    # PKR allocation follows the real received PKR after bank/exchange settlement.
-    amaz_hammad_total_pkr = round(pkr_received * (amaz_hammad_15 / amount_to_pakistan_before_tax), 0) if amount_to_pakistan_before_tax else 0
+
+    amaz_hammad_total_pkr = round(amaz_hammad_15 * exchange_rate, 0)
+
     amaz_pkr = round(amaz_hammad_total_pkr / 2, 0)
+
     hammad_pkr = round(amaz_hammad_total_pkr / 2, 0)
-    hamza_pkr = round(pkr_received - amaz_hammad_total_pkr, 0)
+
+    hamza_pkr = round(calculated_pkr_received - amaz_hammad_total_pkr, 0)
 
     return PayoutResult(
-        tax_amount, final_payout_after_tax, group_30, raza_15, amaz_hammad_15,
-        amaz_cut_usd, hammad_cut_usd, hamza_team_70,
-        amount_to_pakistan_before_tax, pakistan_tax, amount_sent_to_pakistan,
-        calculated_pkr_received, amaz_hammad_total_pkr, amaz_pkr, hammad_pkr, hamza_pkr
+        tax_amount,
+        final_payout_after_tax,
+        group_30,
+        raza_15,
+        amaz_hammad_15,
+        amaz_cut_usd,
+        hammad_cut_usd,
+        hamza_team_70,
+        amount_to_pakistan_before_tax,
+        pakistan_tax,
+        amount_sent_to_pakistan,
+        calculated_pkr_received,
+        amaz_hammad_total_pkr,
+        amaz_pkr,
+        hammad_pkr,
+        hamza_pkr
     )
 
 st.markdown("""
@@ -217,6 +250,13 @@ salary = st.sidebar.number_input("Total Salary Before Tax (USD)", min_value=0.0,
 exchange_rate = st.sidebar.number_input("Bank Exchange Rate (PKR)", min_value=0.0, value=271.50, step=0.50, format="%.2f")
 
 with st.sidebar.expander("Advanced Settings"):
+    additional_deduction = st.number_input(
+    "Additional Deduction Amount",
+    min_value=0.0,
+    value=382.48,
+    step=10.0,
+    format="%.2f"
+)
     overall_tax_rate = st.number_input("Overall Tax Rate", min_value=0.0, max_value=1.0, value=0.32, step=0.01, format="%.4f")
     pakistan_tax_rate = st.number_input("Pakistan Business Tax Rate", min_value=0.0, max_value=1.0, value=0.005, step=0.001, format="%.4f")
 
@@ -224,7 +264,8 @@ result = calculate(
     salary,
     overall_tax_rate,
     pakistan_tax_rate,
-    exchange_rate
+    exchange_rate,
+    additional_deduction
 )
 st.subheader(f"Client: {client_name}")
 st.caption(f"Payout Period: {date_range}")
