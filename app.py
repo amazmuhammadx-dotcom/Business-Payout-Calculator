@@ -1,7 +1,13 @@
 
+
 import streamlit as st
 from datetime import date
 from dataclasses import dataclass
+from io import BytesIO
+from urllib.parse import urlencode
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from openpyxl import Workbook
 
 st.set_page_config(
     page_title="SynqBot",
@@ -194,6 +200,98 @@ def money(x, symbol="$"):
 
 def pkr(x):
     return f"Rs. {x:,.0f}"
+def build_share_url(client_name, date_range, salary, exchange_rate, overall_tax_rate_percent, pakistan_tax_rate_percent, additional_deduction):
+    params = {
+        "client": client_name,
+        "date_range": date_range,
+        "salary": salary,
+        "exchange": exchange_rate,
+        "tax": overall_tax_rate_percent,
+        "pak_tax": pakistan_tax_rate_percent,
+        "deduction": additional_deduction
+    }
+    return "https://business-payout-calculator.streamlit.app/?" + urlencode(params)
+
+
+def create_pdf_report(client_name, date_range, salary, exchange_rate, result):
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    y = height - 60
+
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawString(50, y, "FlowLedger Payout Report")
+
+    y -= 40
+    pdf.setFont("Helvetica", 11)
+    lines = [
+        f"Client: {client_name}",
+        f"Payout Period: {date_range}",
+        f"Total Salary Before Tax: {money(salary)}",
+        f"Bank Exchange Rate: Rs. {exchange_rate:,.2f}",
+        "",
+        f"Overall Tax: {money(result.tax_amount)}",
+        f"Final Payout After Tax: {money(result.final_payout_after_tax)}",
+        f"Raza/Amaz/Hammad 30%: {money(result.group_30)}",
+        f"Raza 15%: {money(result.raza_15)}",
+        f"Amaz/Hammad 15%: {money(result.amaz_hammad_15)}",
+        f"Amaz USD Cut: {money(result.amaz_cut_usd)}",
+        f"Hammad USD Cut: {money(result.hammad_cut_usd)}",
+        f"Hamza Team 70%: {money(result.hamza_team_70)}",
+        f"Pakistan Business Tax: {money(result.pakistan_tax)}",
+        f"Amount Sent to Pakistan: {money(result.amount_sent_to_pakistan)}",
+        "",
+        f"PKR Received: {pkr(result.calculated_pkr_received)}",
+        f"Amaz + Hammad Total: {pkr(result.amaz_hammad_total_pkr)}",
+        f"Amaz PKR: {pkr(result.amaz_pkr)}",
+        f"Hammad PKR: {pkr(result.hammad_pkr)}",
+        f"Hamza Team PKR: {pkr(result.hamza_pkr)}",
+    ]
+
+    for line in lines:
+        pdf.drawString(50, y, line)
+        y -= 22
+
+    pdf.save()
+    buffer.seek(0)
+    return buffer
+
+
+def create_excel_report(client_name, date_range, salary, exchange_rate, result):
+    buffer = BytesIO()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Payout Report"
+
+    rows = [
+        ["Client", client_name],
+        ["Payout Period", date_range],
+        ["Total Salary Before Tax", salary],
+        ["Bank Exchange Rate", exchange_rate],
+        ["Overall Tax", result.tax_amount],
+        ["Final Payout After Tax", result.final_payout_after_tax],
+        ["Raza/Amaz/Hammad 30%", result.group_30],
+        ["Raza 15%", result.raza_15],
+        ["Amaz/Hammad 15%", result.amaz_hammad_15],
+        ["Amaz USD Cut", result.amaz_cut_usd],
+        ["Hammad USD Cut", result.hammad_cut_usd],
+        ["Hamza Team 70%", result.hamza_team_70],
+        ["Pakistan Business Tax", result.pakistan_tax],
+        ["Amount Sent to Pakistan", result.amount_sent_to_pakistan],
+        ["PKR Received", result.calculated_pkr_received],
+        ["Amaz + Hammad Total PKR", result.amaz_hammad_total_pkr],
+        ["Amaz PKR", result.amaz_pkr],
+        ["Hammad PKR", result.hammad_pkr],
+        ["Hamza Team PKR", result.hamza_pkr],
+    ]
+
+    for row in rows:
+        ws.append(row)
+
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer
 
 def calculate(
     salary: float,
@@ -304,7 +402,7 @@ with st.sidebar.expander("Advanced Settings"):
     )
 
     additional_deduction = st.number_input(
-        "Additional Deduction Amount",
+        "Additional Deduction Amount (USD)",
         min_value=0.0,
         value=382.48,
         step=10.0,
