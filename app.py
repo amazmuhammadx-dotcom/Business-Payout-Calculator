@@ -166,8 +166,8 @@ def calculate(
     salary: float,
     overall_tax_rate: float,
     pakistan_tax_rate: float,
-    exchange_rate: float,
-    manual_pkr_received: float | None = None
+    exchange_rate: float
+):
 ) -> PayoutResult:
     tax_amount = round(salary * overall_tax_rate, 2)
     final_payout_after_tax = round(salary - tax_amount, 2)
@@ -187,8 +187,7 @@ def calculate(
     amount_sent_to_pakistan = round(amount_to_pakistan_before_tax - pakistan_tax, 2)
 
     calculated_pkr_received = round(amount_sent_to_pakistan * exchange_rate, 0)
-    pkr_received = manual_pkr_received if manual_pkr_received and manual_pkr_received > 0 else calculated_pkr_received
-
+    pkr_received = calculated_pkr_received
     # PKR allocation follows the real received PKR after bank/exchange settlement.
     amaz_hammad_total_pkr = round(pkr_received * (amaz_hammad_15 / amount_to_pakistan_before_tax), 0) if amount_to_pakistan_before_tax else 0
     amaz_pkr = round(amaz_hammad_total_pkr / 2, 0)
@@ -217,14 +216,17 @@ client_name = st.sidebar.text_input("Client Name", value="Truist")
 date_range = st.sidebar.text_input("Date Range", value="05/18/26 till 05/29/26")
 salary = st.sidebar.number_input("Total Salary Before Tax (USD)", min_value=0.0, value=2112.16, step=10.0, format="%.2f")
 exchange_rate = st.sidebar.number_input("Bank Exchange Rate (PKR)", min_value=0.0, value=271.50, step=0.50, format="%.2f")
-manual_pkr = st.sidebar.number_input("Actual PKR Received (optional)", min_value=0.0, value=242172.0, step=100.0, format="%.0f")
 
 with st.sidebar.expander("Advanced Settings"):
     overall_tax_rate = st.number_input("Overall Tax Rate", min_value=0.0, max_value=1.0, value=0.32, step=0.01, format="%.4f")
     pakistan_tax_rate = st.number_input("Pakistan Business Tax Rate", min_value=0.0, max_value=1.0, value=0.005, step=0.001, format="%.4f")
 
-result = calculate(salary, overall_tax_rate, pakistan_tax_rate, exchange_rate, manual_pkr)
-
+result = calculate(
+    salary,
+    overall_tax_rate,
+    pakistan_tax_rate,
+    exchange_rate
+)
 st.subheader(f"Client: {client_name}")
 st.caption(f"Payout Period: {date_range}")
 
@@ -236,7 +238,7 @@ with c2:
 with c3:
     st.markdown(f'<div class="metric-card"><div class="small-label">Final Payout After Tax</div><p class="big-number glow">{money(result.final_payout_after_tax)}</p></div>', unsafe_allow_html=True)
 with c4:
-    st.markdown(f'<div class="metric-card"><div class="small-label">PKR Received</div><p class="big-number">{pkr(manual_pkr if manual_pkr else result.calculated_pkr_received)}</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="metric-card"><div class="small-label">PKR Received</div><p class="big-number">{result.calculated_pkr_received}</p></div>', unsafe_allow_html=True)
 
 st.divider()
 
