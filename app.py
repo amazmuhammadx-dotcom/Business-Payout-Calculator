@@ -4,62 +4,134 @@ from datetime import date
 from dataclasses import dataclass
 
 st.set_page_config(
-    page_title="Business Payout Calculator",
+    page_title="SynqBot",
     page_icon="💸",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-FUTURISTIC_CSS = """
+FFUTURISTIC_CSS = """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --primary: #0F172A;
+    --accent: #3B82F6;
+    --secondary: #14B8A6;
+    --background: #F8FAFC;
+    --card: #FFFFFF;
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --border: #E5E7EB;
+}
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
 [data-testid="stAppViewContainer"] {
-    background: radial-gradient(circle at top left, #19223f 0, #080b14 35%, #05060a 100%);
-    color: #f5f7ff;
+    background: var(--background);
+    color: var(--text-main);
 }
+
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0b1020, #111827);
+    background: #FFFFFF;
+    border-right: 1px solid var(--border);
 }
+
 .block-container {
     padding-top: 2rem;
+    max-width: 1200px;
 }
+
 .hero-card {
-    padding: 28px;
-    border-radius: 26px;
-    background: linear-gradient(135deg, rgba(30,41,89,.92), rgba(8,12,27,.96));
-    border: 1px solid rgba(120,160,255,.25);
-    box-shadow: 0 0 35px rgba(70,110,255,.18);
+    padding: 34px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #FFFFFF 0%, #EEF6FF 100%);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
 }
-.metric-card {
-    padding: 22px;
-    border-radius: 22px;
-    background: rgba(15,23,42,.78);
-    border: 1px solid rgba(148,163,184,.22);
-    box-shadow: 0 0 24px rgba(56,189,248,.08);
-}
-.big-number {
-    font-size: 32px;
+
+.hero-card h1 {
+    font-size: 52px;
     font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.hero-card p {
+    font-size: 18px;
+    color: var(--text-muted);
+}
+
+.metric-card {
+    padding: 24px;
+    border-radius: 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+.big-number {
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--primary);
     margin: 0;
 }
+
 .small-label {
-    color: #b7c2d8;
-    font-size: 14px;
-    margin-bottom: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
+
 .result-table {
     width: 100%;
     border-collapse: collapse;
+    background: #FFFFFF;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
 }
+
 .result-table th, .result-table td {
-    padding: 12px;
-    border-bottom: 1px solid rgba(148,163,184,.18);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 15px;
 }
+
 .result-table th {
     text-align: left;
-    color: #93c5fd;
+    color: var(--primary);
+    background: #F1F5F9;
+    font-weight: 700;
 }
+
 .glow {
-    color: #7dd3fc;
+    color: var(--accent);
+}
+
+h2, h3 {
+    color: var(--primary);
+    font-weight: 800;
+}
+
+.stButton > button {
+    background: var(--accent);
+    color: white;
+    border-radius: 12px;
+    border: none;
+    padding: 12px 20px;
+    font-weight: 700;
+}
+
+.stTextInput input, .stNumberInput input {
+    border-radius: 12px;
 }
 </style>
 """
@@ -132,7 +204,7 @@ def calculate(
 
 st.markdown("""
 <div class="hero-card">
-    <h1>⚡ Payout Calculator Pro</h1>
+    <h1>FlowLedger</h1>
     <p style="font-size:18px;color:#cbd5e1;">
     Automated salary split, tax deduction, Pakistan payout, exchange-rate conversion, and partner/team distribution.
     </p>
