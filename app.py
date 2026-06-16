@@ -167,7 +167,6 @@ def calculate(
     overall_tax_rate: float,
     pakistan_tax_rate: float,
     exchange_rate: float
-):
 ) -> PayoutResult:
     tax_amount = round(salary * overall_tax_rate, 2)
     final_payout_after_tax = round(salary - tax_amount, 2)
