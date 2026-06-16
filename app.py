@@ -133,6 +133,39 @@ h2, h3 {
 .stTextInput input, .stNumberInput input {
     border-radius: 12px;
 }
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 10px 26px 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.logo-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0F172A, #3B82F6);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.logo-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0F172A;
+}
+
+.logo-subtitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+}
 </style>
 """
 st.markdown(FUTURISTIC_CSS, unsafe_allow_html=True)
@@ -233,12 +266,14 @@ def calculate(
         hamza_pkr
     )
 
-st.markdown("""
-<div class="hero-card">
-    <h1>FlowLedger</h1>
-    <p style="font-size:18px;color:#cbd5e1;">
-    Automated salary split, tax deduction, Pakistan payout, exchange-rate conversion, and partner/team distribution.
-    </p>
+
+st.sidebar.markdown("""
+<div class="sidebar-logo">
+    <div class="logo-icon">F</div>
+    <div>
+        <div class="logo-title">FlowLedger</div>
+        <div class="logo-subtitle">Payout Intelligence</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -250,15 +285,34 @@ salary = st.sidebar.number_input("Total Salary Before Tax (USD)", min_value=0.0,
 exchange_rate = st.sidebar.number_input("Bank Exchange Rate (PKR)", min_value=0.0, value=271.50, step=0.50, format="%.2f")
 
 with st.sidebar.expander("Advanced Settings"):
+    overall_tax_rate_percent = st.number_input(
+        "Overall Tax Rate (%)",
+        min_value=0.0,
+        max_value=100.0,
+        value=32.0,
+        step=1.0,
+        format="%.0f"
+    )
+
+    pakistan_tax_rate_percent = st.number_input(
+        "Pakistan Business Tax Rate (%)",
+        min_value=0.0,
+        max_value=100.0,
+        value=0.5,
+        step=0.1,
+        format="%.1f"
+    )
+
     additional_deduction = st.number_input(
-    "Additional Deduction Amount",
-    min_value=0.0,
-    value=382.48,
-    step=10.0,
-    format="%.2f"
-)
-    overall_tax_rate = st.number_input("Overall Tax Rate", min_value=0.0, max_value=1.0, value=0.32, step=0.01, format="%.4f")
-    pakistan_tax_rate = st.number_input("Pakistan Business Tax Rate", min_value=0.0, max_value=1.0, value=0.005, step=0.001, format="%.4f")
+        "Additional Deduction Amount",
+        min_value=0.0,
+        value=382.48,
+        step=10.0,
+        format="%.2f"
+    )
+
+overall_tax_rate = overall_tax_rate_percent / 100
+pakistan_tax_rate = pakistan_tax_rate_percent / 100
 
 result = calculate(
     salary,
@@ -317,15 +371,4 @@ with right:
 
 st.divider()
 
-with st.expander("Add-on Feature Ideas"):
-    st.write("""
-    - Save payout history
-    - Export PDF report
-    - Export Excel report
-    - Add multiple clients
-    - Add custom partner percentages
-    - Add business expense deductions
-    - Add bank-fee deduction
-    - Add audit log for every payout
-    - Add AI explanation of payout calculation
-    """)
+
